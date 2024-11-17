@@ -5,6 +5,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+vehicle_types = [
+    'vehicle', 'car', 'truck', 'suv', 'van', 'bus', 
+    'motorcycle', 'taxi', 'ambulance', 'firetruck', 'police car'
+]
+
+vehicle_bounding_boxes=[]
+
 # Put your AWS credentials in a .env file
 access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -33,16 +40,24 @@ for image_file in image_files:
                 'Name': image_file
             }
         },
-        MaxLabels=10,  # Adjust based on your needs
-        MinConfidence=0.1  # Confidence threshold
+        MaxLabels=20,  # Adjust based on your needs
+        MinConfidence=40  # Confidence threshold
     )
-
+    print(response)
+    quit
     # Print analysis results
     print(f"Results for {image_file}:")
+    car_count=0
     for label in response['Labels']:
-        car_count=0
         print(f"- {label['Name']}: {label['Confidence']:.2f}%")
-        if label['Name']== 'Car':
-            car_count=len(label.get('Instances',[]))
-            print(car_count)
-            car_count=0
+        if label['Name'].lower() in vehicle_types:
+            car_count+=len(label.get('Instances',[]))
+        if label['Name'] == 'Traffic Jam':
+            for instance in label['Instances']:
+                vehicle_bounding_boxes.append(instance['BoundingBox'])
+    print(car_count)
+    car_count=0
+
+for box in vehicle_bounding_boxes:
+    print(f"Bounding Box: {box}")
+        
